@@ -209,6 +209,10 @@ public extension EditorConfiguration {
             /// 边框高亮状态下的颜色
             public var frameHighlightedColor: UIColor = "#FDCC00".hx.color
             
+            /// Inward padding (pt) on both ends of the **trim frame** (handles + yellow border) — like Instagram. The dark filmstrip still spans the full strip, so as you scroll the unselected video frames are visible in the slack zones outside the trim handles. `0` disables.
+            /// 裁剪框（黄框 + 左右箭头）整体向内缩进的距离（点），类似 Ins：暗色缩略图条仍铺满整条轨道，被裁掉的画面会出现在黄框两侧的留白区域。`0` 关闭。
+            public var filmstripScrollPadding: CGFloat = 28
+            
             public init() { }
         }
     }

@@ -266,11 +266,12 @@ class EditorVideoControlView: UIView {
         imageGenerator?.cancelAllCGImageGeneration()
         videoFrameMap.removeAll()
         
+        let slack = max(0, config.filmstripScrollPadding)
         collectionView.contentInset = UIEdgeInsets(
             top: 4,
-            left: controlWidth,
+            left: controlWidth + slack,
             bottom: 4,
-            right: controlWidth
+            right: controlWidth + slack
         )
         loadItemSize()
         resetValidRect()
@@ -303,7 +304,8 @@ class EditorVideoControlView: UIView {
         if videoSecond <= 0 {
             videoSecond = 1
         }
-        let maxWidth = bgWidth - controlWidth * 2
+        let slack = max(0, config.filmstripScrollPadding)
+        let maxWidth = bgWidth - (controlWidth + slack) * 2
         var singleItemSecond: CGFloat
         let videoMaximumCropDuration = CGFloat(config.maximumTime)
         if videoSecond <= videoMaximumCropDuration || videoMaximumCropDuration <= 0 {
@@ -594,10 +596,12 @@ extension EditorVideoControlView {
         progressLineView.frame = rect
     }
     func resetValidRect() {
+        let slack = max(0, config.filmstripScrollPadding)
+        frameMaskView.outerSlack = slack
         frameMaskView.validRect = CGRect(
-            x: controlWidth,
+            x: controlWidth + slack,
             y: 0,
-            width: bgView.width - controlWidth * 2,
+            width: bgView.width - (controlWidth + slack) * 2,
             height: bgView.height
         )
     }
@@ -631,13 +635,15 @@ extension EditorVideoControlView {
         endDuration - startDuration
     }
     var startDuration: Double {
-        var offsetX = collectionView.contentOffset.x + collectionView.contentInset.left
-        let validX = frameMaskView.validRect.minX - controlWidth
-        let maxOfssetX = contentWidth - (collectionView.width - collectionView.contentInset.left * 2.0)
-        if offsetX > maxOfssetX {
-            offsetX = maxOfssetX
+        let slack = max(0, config.filmstripScrollPadding)
+        var contentX = collectionView.contentOffset.x + frameMaskView.validRect.minX
+        let inset = collectionView.contentInset
+        let maxOffsetX = collectionView.contentSize.width - collectionView.width + inset.right
+        let maxContentX = maxOffsetX + frameMaskView.validRect.minX
+        if contentX > maxContentX {
+            contentX = maxContentX
         }
-        var second = (offsetX + validX) / contentWidth * assetDuration
+        var second = (contentX - slack) / contentWidth * assetDuration
         if second < 0 {
             second = 0
         }else if second > assetDuration {
@@ -669,11 +675,12 @@ extension EditorVideoControlView {
     func stopScroll() {
         let inset = collectionView.contentInset
         var currentOffset = collectionView.contentOffset
-        let maxOffsetX = contentWidth - (collectionView.width - inset.left)
-        if currentOffset.x < -inset.left {
-            currentOffset.x = -inset.left
-        }else if currentOffset.x > maxOffsetX {
-            currentOffset.x = maxOffsetX
+        let minX = -inset.left
+        let maxX = collectionView.contentSize.width - collectionView.width + inset.right
+        if currentOffset.x < minX {
+            currentOffset.x = minX
+        }else if currentOffset.x > maxX {
+            currentOffset.x = maxX
         }
         collectionView.setContentOffset(currentOffset, animated: false)
     }
@@ -924,12 +931,12 @@ struct EditorVideoControlInfo: Codable {
 extension EditorVideoControlView {
     
     var controlInfo: EditorVideoControlInfo {
-        let offsetX = collectionView.contentOffset.x
+        let slack = max(0, config.filmstripScrollPadding)
+        let contentX = collectionView.contentOffset.x + frameMaskView.validRect.minX
         let validX = frameMaskView.validRect.minX
         let validWidth = frameMaskView.validRect.width
         
-        let insert = collectionView.contentInset
-        let offsetXScale = (offsetX + insert.left) / contentWidth
+        let offsetXScale = contentWidth > 0 ? (contentX - slack) / contentWidth : 0
         let validInitialX = controlWidth
         let validMaxWidth = bgView.width - validInitialX * 2
         let validXScale = (validX - validInitialX) / validMaxWidth
@@ -942,13 +949,18 @@ extension EditorVideoControlView {
             return
         }
         let insert = collectionView.contentInset
-        let offsetX = -insert.left + contentWidth * info.offsetXScale
-        collectionView.setContentOffset(CGPoint(x: offsetX, y: -insert.top), animated: false)
+        let slack = max(0, config.filmstripScrollPadding)
         let validInitialX = controlWidth
         let validMaxWidth = bgView.width - validInitialX * 2
         let validX = validMaxWidth * info.validXScale + validInitialX
         let vaildWidth = validMaxWidth * info.validWithScale
         frameMaskView.validRect = CGRect(x: validX, y: 0, width: vaildWidth, height: bgView.height)
+        let rawContentX = slack + contentWidth * info.offsetXScale
+        var offsetX = rawContentX - frameMaskView.validRect.minX
+        let minX = -insert.left
+        let maxX = collectionView.contentSize.width - collectionView.width + insert.right
+        offsetX = min(max(offsetX, minX), maxX)
+        collectionView.setContentOffset(CGPoint(x: offsetX, y: -insert.top), animated: false)
         let totalDuration = endDuration - startDuration
         frameMaskView.isShowFrame = totalDuration < assetDuration
         frameMaskView.updateFrameView()

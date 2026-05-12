@@ -52,6 +52,9 @@ class EditorVideoControlMaskView: UIView {
     var isShowFrame: Bool = false
     var minWidth: CGFloat = 0
     
+    /// Inward padding (pt) at both ends; trim handles can't be dragged into this zone so the slack on each side stays visible.
+    var outerSlack: CGFloat = 0
+    
     var arrowNormalColor: UIColor = .white
     var arrowHighlightedColor: UIColor = .black
     var frameHighlightedColor: UIColor = "#FDCC00".color
@@ -151,8 +154,8 @@ class EditorVideoControlMaskView: UIView {
             switch panGR.view?.tag {
             case 0:
                 leftRect.origin.x += point.x
-                if leftRect.origin.x < 0 {
-                    leftRect.origin.x = 0
+                if leftRect.origin.x < outerSlack {
+                    leftRect.origin.x = outerSlack
                 }
                 if rightRect.origin.x - leftRect.maxX <= minWidth {
                     leftRect.origin.x = rightRect.origin.x - minWidth - leftRect.width
@@ -166,8 +169,8 @@ class EditorVideoControlMaskView: UIView {
                 delegate?.frameMaskView(leftValidRectDidChanged: self)
             case 1:
                 rightRect.origin.x += point.x
-                if rightRect.maxX > width {
-                    rightRect.origin.x = width - rightRect.width
+                if rightRect.maxX > width - outerSlack {
+                    rightRect.origin.x = width - outerSlack - rightRect.width
                 }
                 if rightRect.origin.x - leftRect.maxX <= minWidth {
                     rightRect.origin.x = leftRect.maxX + minWidth
@@ -207,7 +210,8 @@ class EditorVideoControlMaskView: UIView {
     }
     
     func updateFrameView() {
-        if rightControl.x - leftControl.frame.maxX < width - controlWidth * 2 || isShowFrame {
+        let fullTrimWidth = width - controlWidth * 2 - outerSlack * 2
+        if rightControl.x - leftControl.frame.maxX < fullTrimWidth || isShowFrame {
             UIView.animate(withDuration: 0.2) {
                 self.topView.backgroundColor = self.frameHighlightedColor
                 self.bottomView.backgroundColor = self.frameHighlightedColor
