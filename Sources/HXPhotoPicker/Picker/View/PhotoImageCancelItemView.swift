@@ -45,6 +45,11 @@ public class PhotoImageCancelItemView: UIView, PhotoNavigationItem {
         guard let color = PhotoManager.isDark ? config.navigationDarkTintColor : config.navigationTintColor else {
             return
         }
+        if #available(iOS 15.0, *), !PhotoManager.isIos26Compatibility, var configuration = button.configuration {
+            configuration.baseForegroundColor = color
+            button.configuration = configuration
+        }
+        button.tintColor = color
         button.setTitleColor(color, for: .normal)
     }
     

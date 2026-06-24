@@ -24,7 +24,11 @@ public class AlbumGlassTitleView: UIView, PhotoPickerNavigationTitle {
        }
     }
     
-    public var titleColor: UIColor?
+    public var titleColor: UIColor? {
+        didSet {
+            applyTitleColor()
+        }
+    }
     
     public var isSelected: Bool = false {
         didSet {
@@ -52,6 +56,7 @@ public class AlbumGlassTitleView: UIView, PhotoPickerNavigationTitle {
         self.isSplit = isSplit
         super.init(frame: .zero)
         initViews()
+        titleColor = PhotoManager.isDark ? config.navigationTitleDarkColor : config.navigationTitleColor
         size = contentSize
         translatesAutoresizingMaskIntoConstraints = false
     }
@@ -92,6 +97,16 @@ public class AlbumGlassTitleView: UIView, PhotoPickerNavigationTitle {
         button.titleLabel?.lineBreakMode = .byTruncatingTail
         
         addSubview(button)
+    }
+    
+    func applyTitleColor() {
+        let color = titleColor ?? (PhotoManager.isDark ? config.navigationTitleDarkColor : config.navigationTitleColor)
+        if var configuration = button.configuration {
+            configuration.baseForegroundColor = color
+            button.configuration = configuration
+        }else {
+            button.tintColor = color
+        }
     }
     
     var selectHandler: ((PhotoAssetCollection) -> Void)?
@@ -148,6 +163,15 @@ public class AlbumGlassTitleView: UIView, PhotoPickerNavigationTitle {
     public override func layoutSubviews() {
         super.layoutSubviews()
         button.frame = bounds
+    }
+    
+    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #available(iOS 13.0, *) {
+            if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+                applyTitleColor()
+            }
+        }
     }
 
     required init?(coder: NSCoder) {

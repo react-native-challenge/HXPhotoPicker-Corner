@@ -113,6 +113,7 @@ public class PhotoPickerPageViewController: HXBaseViewController, PhotoPickerLis
                     segmentedControl.setWidth(88, forSegmentAt: index)
                 }
                 segmentedControl.addTarget(self, action: #selector(didSegmentedControlClick), for: .valueChanged)
+                updateSegmentedControlColors()
                 let item = UIBarButtonItem(customView: segmentedControl)
                 #if canImport(UIKit.UIGlassEffect)
                 item.hidesSharedBackground = true
@@ -212,11 +213,43 @@ public class PhotoPickerPageViewController: HXBaseViewController, PhotoPickerLis
             segmentedBgView = UIToolbar()
             view.addSubview(segmentedBgView)
         }else {
-            headerView = PhotoPickerPageHeaderView()
+            headerView = PhotoPickerPageHeaderView(config: pickerConfig)
             headerView.delegate = self
             view.addSubview(headerView)
         }
     }
+    
+    func updateColors() {
+        if #available(iOS 26.0, *), !PhotoManager.isIos26Compatibility {
+            updateSegmentedControlColors()
+        }else {
+            headerView?.updateColors()
+        }
+    }
+    
+    @available(iOS 26.0, *)
+    func updateSegmentedControlColors() {
+        guard let segmentedControl else { return }
+        let titleColor = PhotoManager.isDark ? pickerConfig.navigationTitleDarkColor : pickerConfig.navigationTitleColor
+        let indicatorColor = pickerConfig.photoList.bottomView.finishButtonBackgroundColor
+        segmentedControl.selectedSegmentTintColor = indicatorColor
+        segmentedControl.setTitleTextAttributes([
+            .foregroundColor: titleColor.withAlphaComponent(0.5)
+        ], for: .normal)
+        segmentedControl.setTitleTextAttributes([
+            .foregroundColor: titleColor
+        ], for: .selected)
+    }
+    
+    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #available(iOS 13.0, *) {
+            if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+                updateColors()
+            }
+        }
+    }
+    
     public func scrollTo(_ asset: PhotoAsset?, animated: Bool) {
         contentVCs.forEach { $0.scrollTo(asset, animated: animated) }
     }
@@ -398,6 +431,7 @@ protocol PhotoPickerPageHeaderViewDelegate: AnyObject {
 class PhotoPickerPageHeaderView: UIView {
     
     weak var delegate: PhotoPickerPageHeaderViewDelegate?
+    let pickerConfig: PickerConfiguration
     
     var titles: [String] = [] {
         didSet {
@@ -439,14 +473,38 @@ class PhotoPickerPageHeaderView: UIView {
     
     var lastBtn: UIButton?
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    init(config: PickerConfiguration) {
+        self.pickerConfig = config
+        super.init(frame: .zero)
         lineView = UIView()
-        lineView.backgroundColor = "#FE2443".color
         lineView.size = .init(width: 20, height: 2)
         
         bgView = UIToolbar()
-        bgView.barStyle = .black
+        bgView.barStyle = PhotoManager.isDark ? .black : .default
+        updateColors()
+    }
+    
+    var normalTitleColor: UIColor {
+        let titleColor = PhotoManager.isDark ? pickerConfig.navigationTitleDarkColor : pickerConfig.navigationTitleColor
+        return titleColor.withAlphaComponent(0.5)
+    }
+    
+    var selectedTitleColor: UIColor {
+        PhotoManager.isDark ? pickerConfig.navigationTitleDarkColor : pickerConfig.navigationTitleColor
+    }
+    
+    var indicatorColor: UIColor {
+        pickerConfig.photoList.bottomView.finishButtonBackgroundColor
+    }
+    
+    func updateColors() {
+        lineView.backgroundColor = indicatorColor
+        bgView.barStyle = PhotoManager.isDark ? .black : .default
+        for view in subviews {
+            guard let button = view as? UIButton else { continue }
+            button.setTitleColor(normalTitleColor, for: .normal)
+            button.setTitleColor(selectedTitleColor, for: .disabled)
+        }
     }
     
     func updateContentView() {
@@ -455,8 +513,8 @@ class PhotoPickerPageHeaderView: UIView {
         for (index, title) in titles.enumerated() {
             let button = UIButton(type: .system)
             button.setTitle(title, for: .normal)
-            button.setTitleColor(.white.withAlphaComponent(0.5), for: .normal)
-            button.setTitleColor(.white, for: .disabled)
+            button.setTitleColor(normalTitleColor, for: .normal)
+            button.setTitleColor(selectedTitleColor, for: .disabled)
             button.titleLabel?.font = .systemFont(ofSize: 16, weight: .regular)
             button.addTarget(self, action: #selector(didButtonClick(button:)), for: .touchUpInside)
             button.tag = index
@@ -490,6 +548,15 @@ class PhotoPickerPageHeaderView: UIView {
             }else {
                 view.centerX = subviews[selectedIndex + 1].centerX
                 view.y = height - view.height - 5
+            }
+        }
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #available(iOS 13.0, *) {
+            if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+                updateColors()
             }
         }
     }

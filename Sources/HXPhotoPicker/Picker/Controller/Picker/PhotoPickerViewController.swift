@@ -58,6 +58,9 @@ public class PhotoPickerViewController: PhotoBaseViewController {
         if let titleView = titleView {
             titleView.titleColor = titleColor
         }
+        if let pageList = listView as? PhotoPickerPageViewController {
+            pageList.updateColors()
+        }
     }
     
     public override func deviceOrientationWillChanged(notify: Notification) {
