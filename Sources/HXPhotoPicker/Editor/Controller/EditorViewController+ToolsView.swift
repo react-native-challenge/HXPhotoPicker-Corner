@@ -584,7 +584,7 @@ extension EditorViewController: EditorToolsViewDelegate {
         mirrorHorizontallyButton.isHidden = false
         
         var isShowMaskList: Bool = true
-        if let ratio = ratioToolView.selectedRatio?.ratio, (ratio.width < 0 || ratio.height < 0) {
+        if let ratio = ratioToolView.selectedRatio?.ratio, isAspectRatioScaleSwitchable(ratio) {
             isShowMaskList = false
         }
         if isShowMaskList {
@@ -654,11 +654,11 @@ extension EditorViewController: EditorToolsViewDelegate {
         if config.cropSize.aspectRatios.isEmpty {
             return
         }
-        if let ratio = ratioToolView.selectedRatio?.ratio, (ratio.width < 0 || ratio.height < 0) {
-            scaleSwitchView.isHidden = false
-        }else {
+        guard let ratio = ratioToolView.selectedRatio?.ratio,
+              isAspectRatioScaleSwitchable(ratio) else {
             return
         }
+        scaleSwitchView.isHidden = false
         UIView.animate(withDuration: 0.2) {
             if !self.config.cropSize.aspectRatios.isEmpty {
                 self.scaleSwitchView.alpha = 1

@@ -490,8 +490,7 @@ open class EditorViewController: HXBaseViewController {
         view.addSubview(rotateScaleView)
         if !config.cropSize.aspectRatios.isEmpty {
             view.addSubview(ratioToolView)
-            for aspectRatio in config.cropSize.aspectRatios
-                where aspectRatio.ratio.width < 0 || aspectRatio.ratio.height < 0 {
+            if config.cropSize.aspectRatios.contains(where: { isAspectRatioScaleSwitchable($0.ratio) }) {
                 view.addSubview(scaleSwitchView)
             }
         }
@@ -983,9 +982,9 @@ open class EditorViewController: HXBaseViewController {
         if let type = selectedTool?.type {
             switch type {
             case .cropSize:
-                if let ratio = ratioToolView.selectedRatio?.ratio, (ratio.width < 0 || ratio.height < 0) {
+                if let ratio = ratioToolView.selectedRatio?.ratio, isAspectRatioScaleSwitchable(ratio) {
                     showScaleSwitchView(true)
-                }else {
+                } else {
                     showScaleSwitchView(false)
                 }
             default:
@@ -1101,11 +1100,11 @@ open class EditorViewController: HXBaseViewController {
         if let type = selectedTool?.type {
             switch type {
             case .cropSize:
-                if let ratio = ratioToolView.selectedRatio?.ratio, (ratio.width < 0 || ratio.height < 0) {
+                if let ratio = ratioToolView.selectedRatio?.ratio, isAspectRatioScaleSwitchable(ratio) {
                     showScaleSwitchView()
                     maskListButton.isHidden = false
                     maskListButton.alpha = 1
-                }else {
+                } else {
                     hideScaleSwitchView(true)
                 }
             default:

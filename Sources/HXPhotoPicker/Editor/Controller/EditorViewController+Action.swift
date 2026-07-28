@@ -194,12 +194,12 @@ extension EditorViewController {
         if !button.isSelected {
             button.isSelected = true
             scaleSwitchRightBtn.isSelected = false
-            let ratio = editorView.originalAspectRatio
-            if ratio.width > ratio.height {
-                editorView.setAspectRatio(.init(width: ratio.height, height: ratio.width), animated: true)
-            }else {
-                editorView.setAspectRatio(ratio, animated: true)
+            guard let selectedRatio = ratioToolView.selectedRatio?.ratio,
+                  isAspectRatioScaleSwitchable(selectedRatio) else {
+                return
             }
+            let referenceRatio = scaleSwitchReferenceRatio(for: selectedRatio)
+            applyScaleSwitchAspectRatio(referenceRatio: referenceRatio, selectType: 0)
             resetButton.isEnabled = isReset
             scaleSwitchSelectType = 0
         }
@@ -210,12 +210,12 @@ extension EditorViewController {
         if !button.isSelected {
             button.isSelected = true
             scaleSwitchLeftBtn.isSelected = false
-            let ratio = editorView.originalAspectRatio
-            if ratio.width > ratio.height {
-                editorView.setAspectRatio(ratio, animated: true)
-            }else {
-                editorView.setAspectRatio(.init(width: ratio.height, height: ratio.width), animated: true)
+            guard let selectedRatio = ratioToolView.selectedRatio?.ratio,
+                  isAspectRatioScaleSwitchable(selectedRatio) else {
+                return
             }
+            let referenceRatio = scaleSwitchReferenceRatio(for: selectedRatio)
+            applyScaleSwitchAspectRatio(referenceRatio: referenceRatio, selectType: 1)
             resetButton.isEnabled = isReset
             scaleSwitchSelectType = 1
         }
