@@ -441,7 +441,7 @@ open class EditorViewController: HXBaseViewController {
         editorView.exportScale = config.photo.scale
         editorView.initialRoundMask = config.cropSize.isRoundCrop
         editorView.initialFixedRatio = config.cropSize.isFixedRatio
-        editorView.initialAspectRatio = config.cropSize.aspectRatio
+        editorView.initialAspectRatio = resolvedPortraitPreferringAspectRatio(config.cropSize.aspectRatio)
         editorView.maskType = config.cropSize.maskType
         editorView.isShowScaleSize = config.cropSize.isShowScaleSize
         if config.cropSize.isFixedRatio {

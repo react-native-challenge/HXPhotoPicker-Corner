@@ -283,6 +283,11 @@ public extension EditorConfiguration {
         /// 默认宽高比
         public var aspectRatio: CGSize = .zero
         
+        /// Prefer portrait orientation when selecting aspect ratios like 16:9.
+        /// When enabled, 16:9 defaults to vertical (9:16); tap the switch to use horizontal (16:9).
+        /// 选择 16:9 等比例时优先竖屏方向。开启后 16:9 默认竖屏 (9:16)，点击切换按钮后才变为横屏 (16:9)。
+        public var isPreferPortraitAspectRatio: Bool = true
+        
         /// Mask type when clipping
         /// 裁剪时遮罩类型
         public var maskType: EditorView.MaskType = .blurEffect(style: .dark)

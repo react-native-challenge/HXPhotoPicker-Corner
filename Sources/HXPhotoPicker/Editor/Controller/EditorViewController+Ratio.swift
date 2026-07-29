@@ -30,6 +30,27 @@ extension EditorViewController {
         return ratio
     }
     
+    /// 默认选中的横竖屏方向（0: 竖屏, 1: 横屏）
+    func defaultScaleSwitchSelectType(for referenceRatio: CGSize) -> Int {
+        if config.cropSize.isPreferPortraitAspectRatio,
+           referenceRatio.width > 0,
+           referenceRatio.height > 0,
+           referenceRatio.width != referenceRatio.height {
+            return 0
+        }
+        return referenceRatio.width < referenceRatio.height ? 0 : 1
+    }
+    
+    /// 开启竖屏优先后，将横屏比例配置转换为实际应用的竖屏比例
+    func resolvedPortraitPreferringAspectRatio(_ ratio: CGSize) -> CGSize {
+        guard config.cropSize.isPreferPortraitAspectRatio,
+              isAspectRatioScaleSwitchable(ratio),
+              ratio.width > ratio.height else {
+            return ratio
+        }
+        return .init(width: ratio.height, height: ratio.width)
+    }
+    
     /// 根据选中的方向应用比例
     func applyScaleSwitchAspectRatio(referenceRatio: CGSize, selectType: Int) {
         if selectType == 0 {
@@ -58,9 +79,9 @@ extension EditorViewController: EditorRatioToolViewDelegate {
                 buttonType = selectType
                 applyScaleSwitchAspectRatio(referenceRatio: referenceRatio, selectType: selectType)
             } else {
-                buttonType = referenceRatio.width < referenceRatio.height ? 0 : 1
+                buttonType = defaultScaleSwitchSelectType(for: referenceRatio)
                 scaleSwitchSelectType = buttonType
-                editorView.setAspectRatio(referenceRatio, animated: true)
+                applyScaleSwitchAspectRatio(referenceRatio: referenceRatio, selectType: buttonType)
             }
             scaleSwitchLeftBtn.isSelected = buttonType == 0
             scaleSwitchRightBtn.isSelected = buttonType == 1
